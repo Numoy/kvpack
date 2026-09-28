@@ -1,0 +1,29 @@
+name: Release
+
+# Publishes to PyPI when a version tag (v0.2.0, ...) is pushed.
+# One-time setup: add this repository as a "trusted publisher" for the kvpack
+# project on pypi.org (Account settings -> Publishing). No API token is needed.
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  test:
+    uses: ./.github/workflows/ci.yml
+
+  publish:
+    needs: test
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Check the tag matches the package version
+        run: |
+          version=$(uv run --no-sync python -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
+          test "v$version" = "${GITHUB_REF_NAME}" || { echo "Tag ${GITHUB_REF_NAME} != version $version"; exit 1; }
+      - run: uv build
+      - uses: pypa/gh-action-pypi-publish@release/v1

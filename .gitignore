@@ -1,0 +1,21 @@
+__pycache__/
+*.py[cod]
+.venv/
+dist/
+build/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.DS_Store
+
+# Outputs
+runs/
+*.safetensors
+!examples/**/*.safetensors
+
+# kvpack Cloud local data
+kvpack-cloud.db
+kvpack-cloud-data/
+
+# Launch notes (not part of the repo)
+launch/

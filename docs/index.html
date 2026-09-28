@@ -1,0 +1,674 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>kvpack</title>
+<meta name="description" content="kvpack packs your documents into a trained KV cache. Long-context answers without RAG, at a fraction of the memory.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@125,700;125,800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+  :root {
+    color-scheme: light;
+    --ground: #eef0f3;
+    --surface: #ffffff;
+    --surface-2: #e3e7ec;
+    --ink: #141a22;
+    --muted: #566170;
+    --line: #d3d9e0;
+    --accent: #2b45d4;
+    --accent-soft: #dfe4fb;
+    --accent-ink: #ffffff;
+    --miss: #c93d35;
+    --miss-soft: #f7dedc;
+    --cell-0: #dfe4fb;
+    --cell-1: #b3befa;
+    --cell-2: #7f8ff0;
+    --cell-3: #4a61e0;
+    --cell-4: #2437b8;
+    --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+    --body: "IBM Plex Sans", -apple-system, "Segoe UI", Roboto, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    --radius: 6px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --ground: #0d1015;
+      --surface: #151a21;
+      --surface-2: #1c232c;
+      --ink: #e6eaf0;
+      --muted: #97a1ae;
+      --line: #28303a;
+      --accent: #8196ff;
+      --accent-soft: #1d2549;
+      --accent-ink: #0d1015;
+      --miss: #f07a70;
+      --miss-soft: #3a1c1b;
+      --cell-0: #1b2242;
+      --cell-1: #27367a;
+      --cell-2: #3a52b8;
+      --cell-3: #5d77ea;
+      --cell-4: #9aabff;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --ground: #0d1015;
+    --surface: #151a21;
+    --surface-2: #1c232c;
+    --ink: #e6eaf0;
+    --muted: #97a1ae;
+    --line: #28303a;
+    --accent: #8196ff;
+    --accent-soft: #1d2549;
+    --accent-ink: #0d1015;
+    --miss: #f07a70;
+    --miss-soft: #3a1c1b;
+    --cell-0: #1b2242;
+    --cell-1: #27367a;
+    --cell-2: #3a52b8;
+    --cell-3: #5d77ea;
+    --cell-4: #9aabff;
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font: 400 17px/1.6 var(--body);
+    padding-inline: 20px;
+  }
+  .wrap { max-width: 1120px; margin-inline: auto; }
+  a { color: var(--accent); text-underline-offset: 3px; }
+  a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+  code, pre, .mono { font-family: var(--mono); }
+  h1, h2, h3 { font-family: var(--display); font-stretch: 125%; line-height: 1.08; margin: 0; text-wrap: balance; letter-spacing: -0.01em; }
+  h2 { font-size: clamp(1.7rem, 3.4vw, 2.5rem); font-weight: 800; }
+  h3 { font-size: 1.05rem; font-weight: 700; letter-spacing: 0; }
+  p { margin: 0; }
+  .eyebrow { font: 500 0.75rem/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .lede { font-size: 1.15rem; color: var(--muted); max-width: 62ch; }
+  section { padding-block: 72px; border-top: 1px solid var(--line); }
+  .section-head { display: grid; gap: 14px; margin-bottom: 36px; max-width: 760px; }
+
+  /* Header */
+  header.top { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 22px; }
+  .wordmark { font: 800 1.25rem/1 var(--display); font-stretch: 125%; color: var(--ink); text-decoration: none; display: inline-flex; align-items: center; gap: 10px; }
+  .wordmark .chip { width: 22px; height: 16px; border-radius: 2px; background: var(--accent); position: relative; }
+  .wordmark .chip::after { content: ""; position: absolute; left: 4px; right: 4px; bottom: 3px; height: 3px; background: repeating-linear-gradient(90deg, var(--accent-ink) 0 2px, transparent 2px 4px); }
+  nav.links { display: flex; gap: 22px; flex-wrap: wrap; font-size: 0.95rem; }
+  nav.links a { color: var(--muted); text-decoration: none; }
+  nav.links a:hover { color: var(--ink); }
+  @media (max-width: 640px) { nav.links a:not(.gh) { display: none; } }
+
+  /* Hero */
+  .hero { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr); gap: 56px; align-items: center; padding-block: 48px 80px; }
+  .hero h1 { font-size: clamp(2.3rem, 5.6vw, 4.1rem); font-weight: 800; }
+  .hero h1 em { font-style: normal; color: var(--accent); }
+  .hero-copy { display: grid; gap: 24px; }
+  .install { display: flex; align-items: stretch; max-width: 520px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); overflow: hidden; }
+  .install code { flex: 1; padding: 13px 14px; font-size: 0.86rem; white-space: nowrap; overflow-x: auto; }
+  .install button { border: 0; border-left: 1px solid var(--line); background: var(--surface-2); color: var(--ink); font: 500 0.8rem var(--mono); padding: 0 16px; cursor: pointer; }
+  .install button:hover { background: var(--accent-soft); }
+  .ctas { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 18px; border-radius: var(--radius); font-weight: 600; text-decoration: none; font-size: 0.95rem; }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); }
+  .btn.ghost { color: var(--ink); border: 1px solid var(--line); }
+  .btn.ghost:hover { border-color: var(--muted); }
+
+  /* Hero figure: document -> cartridge */
+  .pack { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 22px; display: grid; gap: 18px; }
+  .pack-row { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 16px; align-items: center; }
+  .doc { display: grid; gap: 5px; padding: 14px; border: 1px solid var(--line); border-radius: 4px; background: var(--ground); height: 232px; overflow: hidden; position: relative; }
+  .doc::after { content: ""; position: absolute; inset: auto 0 0 0; height: 56px; background: linear-gradient(transparent, var(--ground)); }
+  .doc i { display: block; height: 5px; border-radius: 3px; background: var(--line); }
+  .doc i.h { height: 7px; background: var(--muted); opacity: 0.55; margin-top: 6px; }
+  .arrow { font: 500 0.72rem/1.3 var(--mono); color: var(--muted); text-align: center; display: grid; gap: 6px; justify-items: center; }
+  .arrow svg { width: 44px; height: 14px; }
+  .cart { display: grid; gap: 8px; justify-items: center; }
+  .cart { min-width: 0; width: 100%; }
+  .grid { display: grid; grid-template-columns: repeat(16, minmax(0, 1fr)); gap: 2px; padding: 10px; border-radius: 4px; border: 1px solid var(--line); background: var(--ground); width: 100%; max-width: 200px; }
+  .grid span { aspect-ratio: 1; border-radius: 1px; background: var(--cell-0); }
+  .grid.animate span { animation: settle 900ms cubic-bezier(.2,.7,.2,1) backwards; }
+  @keyframes settle { from { transform: scale(0.2); opacity: 0.2; } }
+  .pack-labels { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 16px; font: 400 0.78rem/1.4 var(--mono); color: var(--muted); }
+  .pack-labels b { display: block; color: var(--ink); font-weight: 500; }
+  .pack-labels .r { text-align: center; }
+  .pack-foot { font-size: 0.85rem; color: var(--muted); border-top: 1px dashed var(--line); padding-top: 14px; }
+  @media (max-width: 900px) { .hero { grid-template-columns: 1fr; gap: 40px; } }
+  @media (max-width: 520px) {
+    .pack-row { grid-template-columns: 1fr; justify-items: center; }
+    .doc { height: 120px; width: 100%; }
+    .arrow svg { transform: rotate(90deg); margin-block: 16px 8px; }
+    .pack-labels { grid-template-columns: 1fr; gap: 10px; }
+    .pack-labels > div:nth-child(2) { display: none; }
+    .pack-labels .r { text-align: left; }
+  }
+
+
+  /* Three approaches */
+  .approaches { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  .approach { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; display: grid; gap: 14px; align-content: start; }
+  .approach.ours { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+  .approach .tag { font: 500 0.72rem/1 var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .approach.ours .tag { color: var(--accent); }
+  .approach p { color: var(--muted); font-size: 0.95rem; }
+  .approach dl { margin: 0; display: grid; gap: 8px; font-size: 0.9rem; }
+  .approach dl div { display: flex; justify-content: space-between; gap: 12px; border-top: 1px solid var(--line); padding-top: 8px; }
+  .approach dt { color: var(--muted); white-space: nowrap; }
+  .approach dd { margin: 0; font-family: var(--mono); font-size: 0.85rem; text-align: right; }
+  .bad { color: var(--miss); }
+  @media (max-width: 860px) { .approaches { grid-template-columns: 1fr; } }
+
+  /* Calculator */
+  .calc { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 26px; display: grid; gap: 26px; }
+  .calc-top { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 18px; }
+  .calc label { display: grid; gap: 10px; flex: 1 1 320px; font-weight: 500; }
+  .calc output { font: 500 1.6rem/1 var(--mono); font-variant-numeric: tabular-nums; }
+  .calc output small { font-size: 0.85rem; color: var(--muted); }
+  input[type="range"] { width: 100%; accent-color: var(--accent); }
+  .calc-note { font-size: 0.85rem; color: var(--muted); max-width: 44ch; }
+  .bars { display: grid; gap: 16px; }
+  .bar { display: grid; grid-template-columns: 150px minmax(0, 1fr) 190px; gap: 16px; align-items: center; }
+  .bar-name { font-weight: 600; font-size: 0.95rem; }
+  .bar-name small { display: block; font-weight: 400; color: var(--muted); font-size: 0.8rem; }
+  .track { height: 26px; background: var(--ground); border-radius: 3px; overflow: hidden; border: 1px solid var(--line); }
+  .fill { height: 100%; background: var(--muted); width: 0; transition: width 250ms ease; }
+  .bar.cart .fill { background: var(--accent); }
+  .bar.over .fill { background: var(--miss); }
+  .bar-val { font: 500 0.9rem/1.35 var(--mono); font-variant-numeric: tabular-nums; }
+  .bar-val small { display: block; color: var(--muted); font-weight: 400; font-size: 0.78rem; }
+  .bar-val .warn { color: var(--miss); }
+  @media (prefers-reduced-motion: reduce) { .fill { transition: none; } .grid.animate span { animation: none; } }
+  @media (max-width: 720px) { .bar { grid-template-columns: 1fr; gap: 6px; } }
+  .calc-foot { font-size: 0.82rem; color: var(--muted); border-top: 1px dashed var(--line); padding-top: 14px; }
+
+  /* Why not RAG */
+  .why { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 40px; }
+  .why div { display: grid; gap: 8px; padding-top: 18px; border-top: 2px solid var(--ink); }
+  .why p { color: var(--muted); }
+  .example { font-family: var(--mono); font-size: 0.85rem; color: var(--ink); background: var(--miss-soft); padding: 2px 6px; border-radius: 3px; }
+  @media (max-width: 760px) { .why { grid-template-columns: 1fr; } }
+  .honest { margin-top: 36px; padding: 20px 22px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); display: grid; gap: 8px; }
+  .honest p { color: var(--muted); }
+
+  /* Steps */
+  .steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; counter-reset: step; }
+  .step { display: grid; gap: 12px; align-content: start; }
+  .step .num { font: 800 0.95rem/1 var(--display); font-stretch: 125%; color: var(--accent); }
+  .step p { color: var(--muted); font-size: 0.97rem; }
+  .step pre { margin: 4px 0 0; padding: 12px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 4px; font-size: 0.8rem; overflow-x: auto; }
+  @media (max-width: 860px) { .steps { grid-template-columns: 1fr; } }
+
+  /* Results */
+  .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-bottom: 44px; }
+  .stat { padding: 20px 0 0; border-top: 2px solid var(--accent); display: grid; gap: 6px; }
+  .stat b { font: 800 clamp(2rem, 4vw, 2.8rem)/1 var(--display); font-stretch: 125%; font-variant-numeric: tabular-nums; }
+  .stat span { color: var(--muted); font-size: 0.92rem; }
+  @media (max-width: 760px) { .stats { grid-template-columns: 1fr; } }
+  .demo { display: grid; gap: 18px; }
+  .demo-head { display: grid; gap: 8px; max-width: 760px; }
+  .demo-head p { color: var(--muted); }
+  .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; min-width: 620px; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tr:last-child td { border-bottom: 0; }
+  th { font: 500 0.72rem/1.2 var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); background: var(--surface-2); }
+  td.num { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  tr.hl td { background: var(--accent-soft); }
+  .qa { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .qa-q { grid-column: 1 / -1; font-weight: 600; }
+  .qa-a { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; font-size: 0.92rem; display: grid; gap: 6px; align-content: start; }
+  .qa-a .tag { font: 500 0.7rem/1 var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .qa-a.cart { border-color: var(--accent); }
+  .qa-a.cart .tag { color: var(--accent); }
+  @media (max-width: 760px) { .qa { grid-template-columns: 1fr; } }
+  .qa-key { display: block; font-weight: 400; color: var(--muted); font-size: 0.9rem; margin-top: 4px; }
+  .demo-note { color: var(--muted); font-size: 0.95rem; max-width: 72ch; }
+
+  .chart { margin: 0; overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); padding: 8px; }
+  .chart img { display: block; max-width: none; width: 1000px; height: auto; }
+  /* Quickstart */
+  .quick { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: 40px; align-items: start; }
+  .quick pre { margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; font-size: 0.84rem; line-height: 1.7; overflow-x: auto; }
+  .quick pre .c { color: var(--muted); }
+  .quick ul { margin: 0; padding-left: 1.1em; color: var(--muted); display: grid; gap: 8px; }
+  @media (max-width: 860px) { .quick { grid-template-columns: 1fr; } }
+
+  /* Connect */
+  .sources-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  .source-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; display: grid; gap: 12px; align-content: start; }
+  .source-card .tag { font: 500 0.72rem/1 var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); }
+  .source-card p { color: var(--muted); font-size: 0.95rem; }
+  .source-card pre { margin: 0; padding: 10px 12px; background: var(--ground); border: 1px solid var(--line); border-radius: 4px; font-size: 0.78rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+  @media (max-width: 860px) { .sources-grid { grid-template-columns: 1fr; } }
+  .terminal { margin-top: 20px; background: #10141a; color: #d7dde5; border-radius: 10px; padding: 20px 22px; overflow-x: auto; }
+  .terminal pre { margin: 0; font-size: 0.84rem; line-height: 1.7; }
+  .terminal .prompt { color: #8196ff; }
+  .terminal .ok { color: #5fcf96; }
+  .terminal .c { color: #7d8794; }
+  .terminal-note { margin-top: 10px; color: var(--muted); font-size: 0.88rem; }
+
+  /* Studio */
+  .studio { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 40px; align-items: center; }
+  .studio .section-head { margin-bottom: 0; }
+  .studio-points { margin: 0; padding-left: 1.1em; color: var(--muted); display: grid; gap: 10px; }
+  .studio-points strong { color: var(--ink); }
+  .studio-code { margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; font-size: 0.84rem; line-height: 1.7; overflow-x: auto; }
+  .studio-code .c { color: var(--muted); }
+  .shot { margin: 0; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface); }
+  .shot img { display: block; width: 100%; height: auto; }
+  @media (max-width: 860px) { .studio { grid-template-columns: 1fr; } }
+
+  footer { border-top: 1px solid var(--line); padding-block: 36px 48px; display: flex; flex-wrap: wrap; gap: 16px 32px; justify-content: space-between; color: var(--muted); font-size: 0.88rem; }
+  footer p { max-width: 70ch; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <a class="wordmark" href="#top" aria-label="kvpack home"><span class="chip" aria-hidden="true"></span>kvpack</a>
+  <nav class="links" aria-label="Sections">
+    <a href="#connect">Sources</a>
+    <a href="#how">How it works</a>
+    <a href="#results">Benchmark</a>
+    <a href="#studio">Studio</a>
+    <a class="gh" href="https://github.com/Numoy/kvpack">GitHub</a>
+  </nav>
+</header>
+
+<main id="top">
+<div class="hero">
+  <div class="hero-copy">
+    <span class="eyebrow">Open source · Apache 2.0 · runs on your hardware</span>
+    <h1>Pack your knowledge into the model's <em>memory</em>.</h1>
+    <p class="lede">kvpack turns a Git repo, a docs site or a folder into a <strong>cartridge</strong>: a small trained KV cache your model reads instead of a giant prompt. Build it once, keep it in sync, and serve it through an OpenAI-compatible API.</p>
+    <div class="install">
+      <code id="install-cmd">pip install git+https://github.com/Numoy/kvpack</code>
+      <button type="button" id="copy-btn">Copy</button>
+    </div>
+    <div class="ctas">
+      <a class="btn primary" href="https://github.com/Numoy/kvpack">Star on GitHub</a>
+      <a class="btn ghost" href="#results">See the benchmark</a>
+    </div>
+  </div>
+
+  <figure class="pack" aria-label="A 2,336-token document packed into a 256-token cartridge">
+    <div class="pack-row">
+      <div class="doc" id="doc" aria-hidden="true"></div>
+      <div class="arrow" aria-hidden="true">
+        <svg viewBox="0 0 44 14" fill="none"><path d="M0 7h40M34 1l6 6-6 6" stroke="currentColor" stroke-width="1.5"/></svg>
+        self-study<br>+ distill
+      </div>
+      <div class="cart"><div class="grid" id="grid" aria-hidden="true"></div></div>
+    </div>
+    <div class="pack-labels">
+      <div><b>manual.md</b>2,336 tokens</div>
+      <div></div>
+      <div class="r"><b>kestrel.safetensors</b>256 tokens · 28 MiB</div>
+    </div>
+    <p class="pack-foot">The cartridge is a trained key/value cache that sits where the system prompt would be. The model reads it exactly as it would read a document.</p>
+  </figure>
+</div>
+
+<section id="connect">
+  <div class="section-head">
+    <span class="eyebrow">Connect your knowledge</span>
+    <h2>Point it at where your knowledge already lives.</h2>
+    <p class="lede">A cartridge remembers its sources. Run <code>kvpack sync</code> from cron, or let kvpack Studio do it on a schedule: it checks the sources and rebuilds only when something changed, while the current version keeps answering.</p>
+  </div>
+  <div class="sources-grid">
+    <article class="source-card">
+      <span class="tag">Git repository</span>
+      <h3>Docs, runbooks and code</h3>
+      <p>A shallow clone of any https Git remote. Pick a branch or a subfolder. Private repositories use a token from an environment variable.</p>
+      <pre>kvpack build https://github.com/acme/runbooks</pre>
+    </article>
+    <article class="source-card">
+      <span class="tag">Website</span>
+      <h3>A docs site or wiki</h3>
+      <p>The start page and every page linked below its path. kvpack uses the sitemap and respects robots.txt.</p>
+      <pre>kvpack build https://docs.acme.dev/api/</pre>
+    </article>
+    <article class="source-card">
+      <span class="tag">Folder</span>
+      <h3>Files you already have</h3>
+      <p>Markdown, HTML, PDFs, code and plain text, skipping hidden and dependency folders.</p>
+      <pre>kvpack build ./policies ./handbook.pdf</pre>
+    </article>
+  </div>
+  <div class="terminal" role="img" aria-label="Terminal: kvpack sync skips the rebuild when nothing changed and rebuilds after an edit">
+<pre><span class="prompt">$</span> kvpack sync runbook.safetensors
+Fetched 1 document
+<span class="ok">runbook.safetensors is up to date.</span>
+
+<span class="prompt">$</span> echo "The Gondola now carries 8 people." &gt;&gt; runbook/manual.md
+<span class="prompt">$</span> kvpack sync runbook.safetensors
+Fetched 1 document
+Sources changed. Rebuilding with the original settings...
+Corpus: 2,360 tokens -&gt; cartridge of 128 tokens
+<span class="c">Self-study ━━━━━━━━━━━━━━━━━━━━ 16/16</span>
+<span class="c">Training   ━━━━━━━━━━━━━━━━━━━━   2/2</span>
+<span class="ok">Saved cartridge to runbook.safetensors</span></pre>
+  </div>
+  <p class="terminal-note">A real run, with a small test build. A running <code>kvpack serve</code> picks up the new file without a restart. More connectors (Notion, Google Drive, Confluence) are one class each: <a href="https://github.com/Numoy/kvpack/blob/main/src/kvpack/sources.py">write one</a>.</p>
+</section>
+
+<section id="compare">
+  <div class="section-head">
+    <span class="eyebrow">Three ways to give a model your documents</span>
+    <h2>Three trade-offs between memory, speed and recall.</h2>
+  </div>
+  <div class="approaches">
+    <article class="approach">
+      <span class="tag">Long prompt</span>
+      <h3>Paste everything into the context</h3>
+      <p>The model sees it all, but every conversation re-reads and stores the whole corpus.</p>
+      <dl>
+        <div><dt>Corpus seen</dt><dd>all</dd></div>
+        <div><dt>Memory</dt><dd class="bad">grows with corpus</dd></div>
+        <div><dt>First token</dt><dd class="bad">after full prefill</dd></div>
+        <div><dt>Exact recall</dt><dd>best</dd></div>
+      </dl>
+    </article>
+    <article class="approach">
+      <span class="tag">RAG</span>
+      <h3>Retrieve a few chunks</h3>
+      <p>Cheap per question, but the model only sees what the search step happened to find.</p>
+      <dl>
+        <div><dt>Corpus seen</dt><dd class="bad">top-k chunks</dd></div>
+        <div><dt>Memory</dt><dd>small</dd></div>
+        <div><dt>First token</dt><dd>search + prefill</dd></div>
+        <div><dt>Exact recall</dt><dd>good, if found</dd></div>
+      </dl>
+    </article>
+    <article class="approach ours">
+      <span class="tag">kvpack cartridge</span>
+      <h3>Load a trained cache</h3>
+      <p>Trained once on the whole corpus into a compressed memory, then loaded in front of every conversation.</p>
+      <dl>
+        <div><dt>Corpus seen</dt><dd>all, via training</dd></div>
+        <div><dt>Memory</dt><dd>small, fixed</dd></div>
+        <div><dt>First token</dt><dd>nothing to prefill</dd></div>
+        <div><dt>Exact recall</dt><dd class="bad">lossy, grows with scale</dd></div>
+      </dl>
+    </article>
+  </div>
+</section>
+
+<section id="memory">
+  <div class="section-head">
+    <span class="eyebrow">The memory math</span>
+    <h2>How much GPU memory does one conversation need?</h2>
+    <p class="lede">Every token in the context costs 128 KiB of KV cache on Llama-3.1-8B (32 layers × 8 KV heads × 128 dimensions × keys and values × 2 bytes). Drag the slider to change the size of your corpus.</p>
+  </div>
+  <div class="calc">
+    <div class="calc-top">
+      <label for="corpus">Corpus size
+        <input type="range" id="corpus" min="0" max="100" step="1" value="56" aria-describedby="corpus-out">
+      </label>
+      <output id="corpus-out" for="corpus">132k <small>tokens</small></output>
+    </div>
+    <div class="bars">
+      <div class="bar" id="bar-long">
+        <div class="bar-name">Long prompt<small>whole corpus in context</small></div>
+        <div class="track"><div class="fill"></div></div>
+        <div class="bar-val"></div>
+      </div>
+      <div class="bar" id="bar-rag">
+        <div class="bar-name">RAG<small>8 chunks of 512 tokens</small></div>
+        <div class="track"><div class="fill"></div></div>
+        <div class="bar-val"></div>
+      </div>
+      <div class="bar cart" id="bar-cart">
+        <div class="bar-name">Cartridge<small>2,048 trained tokens</small></div>
+        <div class="track"><div class="fill"></div></div>
+        <div class="bar-val"></div>
+      </div>
+    </div>
+    <p class="calc-foot">Each conversation also holds 2,000 tokens of chat. "Conversations per GPU" assumes an 80 GB GPU with 16 GB taken by the model weights. The cartridge's corpus coverage comes from training on all of it, not from holding it in the context.</p>
+  </div>
+</section>
+
+<section id="why">
+  <div class="section-head">
+    <span class="eyebrow">Why build something other than RAG?</span>
+    <h2>Retrieval can only answer with what it finds.</h2>
+    <p class="lede">These are the problems cartridges are designed for. Whether they solve them better than RAG depends on the model, the budget and the data, so measure it on yours with <code>kvpack eval</code>.</p>
+  </div>
+  <div class="why">
+    <div>
+      <h3>Questions that span the corpus</h3>
+      <p>Ask <span class="example">which procedures changed between revision 5 and 7?</span> and there's no single chunk to retrieve. A cartridge is trained on every section, so nothing depends on a search step picking the right one.</p>
+    </div>
+    <div>
+      <h3>Chunk boundaries cut meaning</h3>
+      <p>A definition on page 3 and the rule that depends on it on page 40 rarely land in the same retrieved chunk. The cartridge never splits the corpus at query time.</p>
+    </div>
+    <div>
+      <h3>Search misses paraphrases</h3>
+      <p>Embedding search matches wording. When a question uses different words from the document, the right passage can rank below the cutoff and the model never sees it.</p>
+    </div>
+    <div>
+      <h3>Less infrastructure at query time</h3>
+      <p>No vector database and no ranking step. A cartridge is one <code>.safetensors</code> file that you load next to the model.</p>
+    </div>
+  </div>
+  <div class="honest">
+    <h3>When RAG is the better choice today</h3>
+    <p>For exact fact lookup with a small model, RAG wins in our benchmark below, even with the same memory budget. It also wins if your data changes every minute or you need a citation to the source passage. A cartridge costs minutes to hours of GPU time to train, so it suits documents that change occasionally, get asked about often, and are served where memory per conversation or time to first token matters.</p>
+  </div>
+</section>
+
+<section id="how">
+  <div class="section-head">
+    <span class="eyebrow">How it works</span>
+    <h2>The model studies your documents, then the cache learns what it learned.</h2>
+    <p class="lede">kvpack implements <a href="https://arxiv.org/abs/2506.06266">self-study with context distillation</a> from the Cartridges paper (ICLR 2026). The model's weights never change. Only the cartridge is trained.</p>
+  </div>
+  <div class="steps">
+    <div class="step">
+      <span class="num">1 · Self-study</span>
+      <h3>Practice conversations</h3>
+      <p>kvpack fetches your sources, shows the model a random chunk and has it write a question: a fact to recall, a section to summarize, data to extract. The model then answers with the chunk in view, and kvpack records its next-token probabilities.</p>
+      <pre>kvpack build https://github.com/acme/docs</pre>
+    </div>
+    <div class="step">
+      <span class="num">2 · Distill</span>
+      <h3>Train the cache</h3>
+      <p>The cartridge starts as the real KV cache of the corpus's opening. For each practice question, the model sees only the cartridge, and gradient descent updates the cached keys and values until its answer probabilities match the recorded ones.</p>
+      <pre>kvpack sync docs.safetensors</pre>
+    </div>
+    <div class="step">
+      <span class="num">3 · Load</span>
+      <h3>Use it anywhere</h3>
+      <p>The cartridge replaces the system prompt. Chat with it in the terminal, compare it against the full document, or serve it behind an OpenAI-compatible API where each cartridge is its own model.</p>
+      <pre>kvpack serve docs.safetensors</pre>
+    </div>
+  </div>
+</section>
+
+<section id="results">
+  <div class="section-head">
+    <span class="eyebrow">Results</span>
+    <h2>The research says it works at scale. Here's our own benchmark, including where it loses.</h2>
+  </div>
+  <div class="stats">
+    <div class="stat"><b>38.6×</b><span>less memory than putting the corpus in context, at matching quality (Cartridges paper)</span></div>
+    <div class="stat"><b>26.4×</b><span>higher serving throughput, because each conversation needs so much less KV cache (Cartridges paper)</span></div>
+    <div class="stat"><b>484k</b><span>tokens of effective context on MTOB, up from the model's native 128k (Cartridges paper)</span></div>
+  </div>
+  <div class="demo">
+    <div class="demo-head">
+      <h3>A small model, a document it has never seen, 28 questions</h3>
+      <p>Qwen3-0.6B on an M1 Max. We packed a 2,341-token fictional manual into 256- and 1,024-token cartridges trained on 384 practice conversations, then asked 28 questions, each graded by the facts a correct answer must contain. RAG uses BM25 retrieval; "cartridge + 1 chunk" gives the model both.</p>
+    </div>
+    <figure class="chart">
+      <img src="assets/benchmark.svg" alt="Bar charts of correct answers, KV cache memory and time to first token for full documents, RAG with 4 chunks, RAG with 1 chunk, the cartridge and no context" width="1000">
+    </figure>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Setup</th><th>Correct</th><th>Context held</th><th>KV cache</th><th>Time to first token</th></tr></thead>
+        <tbody>
+          <tr><td>Full document</td><td class="num">25/28</td><td class="num">2,341 tokens</td><td class="num">256 MiB</td><td class="num">1,129 ms</td></tr>
+          <tr><td>RAG, 4 chunks</td><td class="num">24/28</td><td class="num">1,006 tokens</td><td class="num">110 MiB</td><td class="num">448 ms</td></tr>
+          <tr><td>RAG, 2 chunks</td><td class="num">25/28</td><td class="num">507 tokens</td><td class="num">55 MiB</td><td class="num">273 ms</td></tr>
+          <tr><td>RAG, 1 chunk</td><td class="num">24/28</td><td class="num">255 tokens</td><td class="num">28 MiB</td><td class="num">162 ms</td></tr>
+          <tr class="hl"><td><strong>Cartridge (256) + 1 chunk</strong></td><td class="num"><strong>25/28</strong></td><td class="num"><strong>506 tokens</strong></td><td class="num"><strong>55 MiB</strong></td><td class="num"><strong>207 ms</strong></td></tr>
+          <tr class="hl"><td><strong>Cartridge, 1,024 tokens</strong></td><td class="num"><strong>16/28</strong></td><td class="num"><strong>1,024 tokens</strong></td><td class="num"><strong>112 MiB</strong></td><td class="num"><strong>81 ms</strong></td></tr>
+          <tr class="hl"><td><strong>Cartridge, 256 tokens</strong></td><td class="num"><strong>12/28</strong></td><td class="num"><strong>256 tokens</strong></td><td class="num"><strong>28 MiB</strong></td><td class="num"><strong>85 ms</strong></td></tr>
+          <tr><td>No context</td><td class="num">0/28</td><td class="num">0</td><td class="num">0</td><td class="num">41 ms</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="demo-note">On its own, a cartridge is the fastest setup that knows the document, but at this tiny scale it recalls fewer facts than RAG. Together with one retrieved chunk it matches the full document and the best RAG setup (25/28) with a fifth of the full document's memory. The paper's results come from 4B–8B models and thousands of practice conversations; we'll publish larger runs here. Every command is in the <a href="https://github.com/Numoy/kvpack#reproduce-the-benchmark">README</a>.</p>
+  </div>
+</section>
+
+<section id="studio">
+  <div class="studio">
+    <div class="section-head">
+      <span class="eyebrow">kvpack Studio · self-hosted</span>
+      <h2>A workspace for your team, on your own machines.</h2>
+      <p class="lede">Studio is the same engine with a web app on top. Connect sources, watch builds, try cartridges in a playground, and hand out API keys. Every cartridge is a model name in an OpenAI-compatible API.</p>
+      <ul class="studio-points">
+        <li><strong>Keeps itself current.</strong> Hourly, daily or weekly syncs rebuild only on change, with zero downtime.</li>
+        <li><strong>Safe for many users.</strong> Private network addresses, stray server folders and unlisted secrets are refused by default.</li>
+        <li><strong>Runs where you do.</strong> One GPU box, or your own Modal account with GPUs that scale to zero.</li>
+        <li><strong>No lock-in.</strong> Download any cartridge as a file and serve it with plain <code>kvpack serve</code>.</li>
+      </ul>
+<pre class="studio-code"><span class="c"># one GPU machine</span>
+cd studio &amp;&amp; uv sync
+uv run kvpack-studio serve --host 0.0.0.0</pre>
+    </div>
+    <figure class="shot">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="assets/studio-connect-dark.png">
+        <img src="assets/studio-connect-light.png" alt="kvpack Studio: connect a Git repository, website, folder or upload, and keep it in sync" width="1280" height="1000" loading="lazy">
+      </picture>
+    </figure>
+  </div>
+</section>
+
+<section id="start">
+  <div class="quick">
+    <div class="section-head">
+      <span class="eyebrow">Quickstart</span>
+      <h2>Build your first cartridge.</h2>
+      <ul>
+        <li>Works with open-weight models you run yourself: Llama 3.x, Qwen3 and others built like them. Hosted APIs like ChatGPT can't load a KV cache, so they're not supported.</li>
+        <li>Runs on NVIDIA GPUs, Apple Silicon and CPU.</li>
+        <li>On a GPU server, point it at vLLM to generate practice data much faster.</li>
+      </ul>
+    </div>
+<pre><span class="c"># install</span>
+pip install git+https://github.com/Numoy/kvpack
+
+<span class="c"># a repo, a docs site or a folder in, a cartridge out</span>
+kvpack build https://github.com/your-org/handbook --model Qwen/Qwen3-4B
+
+<span class="c"># how does it do against RAG on your questions?</span>
+kvpack eval handbook.safetensors --docs https://github.com/your-org/handbook -q questions.jsonl
+
+<span class="c"># serve it behind an OpenAI-compatible API, and keep it fresh</span>
+kvpack serve handbook.safetensors --port 8000
+kvpack sync handbook.safetensors</pre>
+  </div>
+</section>
+</main>
+
+<footer>
+  <p>kvpack implements <a href="https://arxiv.org/abs/2506.06266">Cartridges: Lightweight and general-purpose long context representations via self-study</a> by Eyuboglu et al. (ICLR 2026). Research figures on this page come from that paper.</p>
+  <p><a href="https://github.com/Numoy/kvpack">GitHub</a> · Apache 2.0</p>
+</footer>
+
+</div>
+
+<script>
+(function () {
+  // Hero: a document's lines on the left, the cartridge's cells on the right.
+  var doc = document.getElementById("doc");
+  var widths = [38, 92, 88, 95, 70, 0, 45, 90, 97, 84, 93, 60, 0, 52, 89, 94, 76, 91, 55, 0, 41, 96, 87, 92, 68, 90, 83];
+  widths.forEach(function (w) {
+    var line = document.createElement("i");
+    if (w === 0) { line.className = "h"; line.style.width = "32%"; }
+    else line.style.width = w + "%";
+    doc.appendChild(line);
+  });
+
+  var grid = document.getElementById("grid");
+  var seed = 7;
+  function rand() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
+  var shades = ["var(--cell-0)", "var(--cell-1)", "var(--cell-2)", "var(--cell-3)", "var(--cell-4)"];
+  for (var i = 0; i < 16 * 12; i++) {
+    var cell = document.createElement("span");
+    var row = Math.floor(i / 16);
+    var v = rand() * 0.75 + (row % 3 === 0 ? 0.2 : 0);
+    cell.style.background = shades[Math.min(4, Math.floor(v * 5))];
+    cell.style.animationDelay = (i % 16) * 25 + row * 18 + "ms";
+    grid.appendChild(cell);
+  }
+  grid.classList.add("animate");
+
+  // Copy button
+  var btn = document.getElementById("copy-btn");
+  btn.addEventListener("click", function () {
+    var text = document.getElementById("install-cmd").textContent;
+    var done = function () { btn.textContent = "Copied"; setTimeout(function () { btn.textContent = "Copy"; }, 1600); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, selectText);
+    } else selectText();
+    function selectText() {
+      var range = document.createRange();
+      range.selectNodeContents(document.getElementById("install-cmd"));
+      var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+    }
+  });
+
+  // Memory calculator (Llama-3.1-8B, bf16 KV cache).
+  var KIB_PER_TOKEN = 128;          // 32 layers x 8 KV heads x 128 dims x 2 (K and V) x 2 bytes
+  var CHAT = 2000;                  // tokens of conversation on top of the context
+  var RAG = 8 * 512;                // retrieved tokens
+  var CART = 2048;                  // cartridge size
+  var NATIVE = 131072;              // Llama-3.1 context window
+  var KV_BUDGET_GIB = 64;           // 80 GB GPU minus ~16 GB of weights
+  var slider = document.getElementById("corpus");
+  var out = document.getElementById("corpus-out");
+
+  function tokensAt(v) { return Math.round(Math.pow(10, 4 + (v / 100) * 2) / 1000) * 1000; } // 10k .. 1M, log scale
+  function fmtTokens(t) { return t >= 1e6 ? (t / 1e6).toFixed(1).replace(/\.0$/, "") + "M" : Math.round(t / 1000) + "k"; }
+  function gib(tokens) { return tokens * KIB_PER_TOKEN / (1024 * 1024); }
+  function fmtGiB(g) { return g >= 10 ? g.toFixed(0) + " GiB" : g >= 1 ? g.toFixed(1) + " GiB" : Math.round(g * 1024) + " MiB"; }
+  function perGpu(g) { var n = Math.floor(KV_BUDGET_GIB / g); return n < 1 ? "doesn't fit on one GPU" : n.toLocaleString("en-US") + " conversations per GPU"; }
+
+  function setBar(id, memGiB, maxGiB, lines, over) {
+    var el = document.getElementById(id);
+    el.classList.toggle("over", !!over);
+    el.querySelector(".fill").style.width = Math.max(1.2, Math.min(100, (memGiB / maxGiB) * 100)) + "%";
+    el.querySelector(".bar-val").innerHTML = lines;
+  }
+
+  function update() {
+    var corpus = tokensAt(+slider.value);
+    out.innerHTML = fmtTokens(corpus) + " <small>tokens</small>";
+    var longMem = gib(corpus + CHAT), ragMem = gib(RAG + CHAT), cartMem = gib(CART + CHAT);
+    var max = Math.max(longMem, 8);
+    var tooLong = corpus > NATIVE;
+    setBar("bar-long", longMem, max,
+      fmtGiB(longMem) + "<small" + (tooLong ? ' class="warn">exceeds the 128k context window' : ">" + perGpu(longMem)) + "</small>", tooLong);
+    var ragCover = Math.min(100, RAG / corpus * 100);
+    setBar("bar-rag", ragMem, max,
+      fmtGiB(ragMem) + '<small class="warn">sees ' + (ragCover < 1 ? ragCover.toFixed(1) : Math.round(ragCover)) + "% of the corpus</small>");
+    setBar("bar-cart", cartMem, max, fmtGiB(cartMem) + "<small>" + perGpu(cartMem) + "</small>");
+  }
+  slider.addEventListener("input", update);
+  update();
+})();
+</script>
+</body>
+</html>

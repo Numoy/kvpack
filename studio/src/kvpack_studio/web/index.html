@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>kvpack Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@125,700;125,800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap top-inner">
+    <a class="wordmark" href="#"><span class="chip" aria-hidden="true"></span>kvpack <span class="wordmark-sub">Studio</span></a>
+    <nav class="tabs" id="tabs" hidden aria-label="Sections">
+      <button type="button" data-tab="cartridges" class="active">Cartridges</button>
+      <button type="button" data-tab="keys">API keys</button>
+      <button type="button" data-tab="usage">Usage</button>
+    </nav>
+    <div class="account" id="account" hidden>
+      <span id="account-email"></span>
+      <button type="button" class="link" id="sign-out">Sign out</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- Sign in / sign up -->
+  <section id="view-auth" class="auth" hidden>
+    <div class="auth-intro">
+      <h1>Pack your knowledge into a model's memory.</h1>
+      <p class="lede">Connect a Git repository, a docs site or a folder. kvpack Studio packs it into a cartridge, keeps it in sync, and serves it to any OpenAI client.</p>
+    </div>
+    <div class="auth-forms">
+      <form id="signin-form" class="card stack">
+        <h2>Sign in</h2>
+        <label for="signin-key">API key</label>
+        <input id="signin-key" type="password" autocomplete="current-password" placeholder="kvp_..." required>
+        <button type="submit" class="primary">Sign in</button>
+        <p class="form-error" id="signin-error" hidden></p>
+      </form>
+      <form id="signup-form" class="card stack" hidden>
+        <h2 id="signup-title">Create an account</h2>
+        <label for="signup-email">Email</label>
+        <input id="signup-email" type="email" autocomplete="email" required>
+        <div class="stack" id="invite-row">
+          <label for="signup-invite">Invite code</label>
+          <input id="signup-invite" type="text" autocomplete="off">
+        </div>
+        <button type="submit">Create account</button>
+        <p class="form-error" id="signup-error" hidden></p>
+      </form>
+    </div>
+  </section>
+
+  <!-- A new API key, shown once -->
+  <section id="view-newkey" class="card stack newkey" hidden>
+    <h2>Save your API key</h2>
+    <p>This is the only time it's shown. It signs you in here and authenticates API requests.</p>
+    <div class="copyline"><code id="newkey-value"></code><button type="button" id="newkey-copy">Copy</button></div>
+    <button type="button" class="primary" id="newkey-done">I've saved it</button>
+  </section>
+
+  <!-- Cartridges -->
+  <section id="view-cartridges" hidden>
+    <div class="grid-2">
+      <form id="create-form" class="card stack create">
+        <h2>Connect a source</h2>
+        <div class="source-tabs" role="tablist" id="source-tabs">
+          <button type="button" role="tab" data-source="git" class="active">Git repository</button>
+          <button type="button" role="tab" data-source="web">Website</button>
+          <button type="button" role="tab" data-source="folder" hidden>Folder</button>
+          <button type="button" role="tab" data-source="upload">Upload</button>
+        </div>
+
+        <div class="source-panel stack" data-panel="git">
+          <label for="git-url">Repository URL</label>
+          <input id="git-url" type="url" placeholder="https://github.com/your-org/handbook">
+          <div class="two">
+            <div class="stack"><label for="git-branch">Branch <span class="muted">(optional)</span></label>
+              <input id="git-branch" type="text" placeholder="main"></div>
+            <div class="stack"><label for="git-subdir">Folder <span class="muted">(optional)</span></label>
+              <input id="git-subdir" type="text" placeholder="docs"></div>
+          </div>
+          <div class="stack" id="git-token-row" hidden>
+            <label for="git-token">Access token <span class="muted">(private repositories)</span></label>
+            <select id="git-token"><option value="">None: public repository</option></select>
+          </div>
+        </div>
+
+        <div class="source-panel stack" data-panel="web" hidden>
+          <label for="web-url">Start page</label>
+          <input id="web-url" type="url" placeholder="https://docs.example.com/guide/">
+          <p class="hint">kvpack reads this page and every page linked below its path, and follows the site's sitemap and robots.txt.</p>
+          <label for="web-pages">Maximum pages</label>
+          <input id="web-pages" type="number" min="1" max="2000" value="200">
+        </div>
+
+        <div class="source-panel stack" data-panel="folder" hidden>
+          <label for="folder-path">Folder on the server</label>
+          <input id="folder-path" type="text">
+          <p class="hint" id="folder-hint"></p>
+        </div>
+
+        <div class="source-panel stack" data-panel="upload" hidden>
+          <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-describedby="drop-hint">
+            <input type="file" id="files" multiple hidden>
+            <strong>Drop documents here</strong>
+            <span id="drop-hint">or click to choose files. Text, Markdown, HTML, code, PDF and more.</span>
+          </div>
+          <ul class="file-list" id="file-list"></ul>
+        </div>
+
+        <label for="create-name">Name</label>
+        <input id="create-name" type="text" maxlength="100" placeholder="handbook">
+        <div class="stack" id="sync-row">
+          <label for="create-sync">Keep in sync</label>
+          <select id="create-sync">
+            <option value="0">Only when I click Sync</option>
+            <option value="1">Every hour</option>
+            <option value="6">Every 6 hours</option>
+            <option value="24" selected>Every day</option>
+            <option value="168">Every week</option>
+          </select>
+          <p class="hint">kvpack checks the source and only rebuilds when something changed. The current version keeps answering while a new one builds.</p>
+        </div>
+        <details class="advanced">
+          <summary>Advanced</summary>
+          <div class="stack">
+            <label for="create-model">Base model</label>
+            <select id="create-model"></select>
+            <label for="create-tokens">Cartridge size (tokens)</label>
+            <input id="create-tokens" type="number" min="16" step="1">
+            <label for="create-samples">Practice conversations</label>
+            <input id="create-samples" type="number" min="8" step="1">
+          </div>
+        </details>
+        <button type="submit" class="primary" id="create-submit">Build cartridge</button>
+        <p class="form-error" id="create-error" hidden></p>
+        <p class="import-line muted">Built one with the kvpack CLI?
+          <button type="button" class="link" id="import-button">Import a .safetensors file</button>
+          <input type="file" id="import-file" accept=".safetensors" hidden>
+        </p>
+      </form>
+
+      <div class="card list-card">
+        <div class="list-head"><h2>Your cartridges</h2><span class="muted" id="cartridge-count"></span></div>
+        <p class="empty" id="cartridges-empty" hidden>No cartridges yet. Upload some documents to build your first one.</p>
+        <ul class="cartridges" id="cartridges"></ul>
+      </div>
+    </div>
+
+    <article class="card detail" id="detail" hidden>
+      <div class="detail-head">
+        <div>
+          <span class="eyebrow" id="detail-id"></span>
+          <h2 id="detail-name"></h2>
+        </div>
+        <div class="detail-actions">
+          <button type="button" id="detail-sync">Sync now</button>
+          <button type="button" id="detail-download">Download</button>
+          <button type="button" class="danger" id="detail-delete">Delete</button>
+          <button type="button" class="danger" id="detail-delete-confirm" hidden>Delete permanently</button>
+        </div>
+      </div>
+
+      <div class="sources-box">
+        <div class="sources-head">
+          <h3>Sources</h3>
+          <label class="inline-select" for="detail-sync-every">Keep in sync
+            <select id="detail-sync-every">
+              <option value="0">Manually</option>
+              <option value="1">Every hour</option>
+              <option value="6">Every 6 hours</option>
+              <option value="24">Every day</option>
+              <option value="168">Every week</option>
+            </select>
+          </label>
+        </div>
+        <ul class="sources" id="detail-sources"></ul>
+        <p class="muted small" id="detail-version"></p>
+      </div>
+
+      <div class="building" id="detail-building" hidden>
+        <div class="progress"><div class="progress-fill" id="detail-progress"></div></div>
+        <p class="muted" id="detail-stage"></p>
+      </div>
+      <p class="form-error" id="detail-error" hidden></p>
+
+      <div id="detail-ready" hidden>
+        <dl class="facts" id="detail-facts"></dl>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Held-out quality check</th><th>Token agreement</th></tr></thead>
+            <tbody id="detail-metrics"></tbody>
+          </table>
+        </div>
+        <p class="muted metrics-note" id="detail-metrics-note"></p>
+
+        <div class="grid-2 playground-grid">
+          <div class="playground stack">
+            <h3>Playground</h3>
+            <div class="chat" id="chat" aria-live="polite"></div>
+            <form id="chat-form" class="chat-form">
+              <label class="visually-hidden" for="chat-input">Message</label>
+              <input id="chat-input" type="text" placeholder="Ask about your documents" autocomplete="off" required>
+              <button type="submit" class="primary" id="chat-send">Send</button>
+            </form>
+          </div>
+          <div class="stack">
+            <h3>Use it from code</h3>
+            <div class="snippet-tabs" role="tablist">
+              <button type="button" class="active" data-snippet="python">Python</button>
+              <button type="button" data-snippet="curl">curl</button>
+            </div>
+            <pre class="snippet"><code id="snippet"></code></pre>
+            <button type="button" id="snippet-copy">Copy</button>
+          </div>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <!-- API keys -->
+  <section id="view-keys" class="card stack" hidden>
+    <h2>API keys</h2>
+    <p class="muted">Keys authenticate API requests and sign you in here. Revoked keys stop working immediately.</p>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Name</th><th>Key</th><th>Created</th><th>Last used</th><th></th></tr></thead>
+        <tbody id="keys"></tbody>
+      </table>
+    </div>
+    <form id="key-form" class="inline-form">
+      <label class="visually-hidden" for="key-name">Key name</label>
+      <input id="key-name" type="text" maxlength="100" placeholder="Key name, e.g. production">
+      <button type="submit">Create key</button>
+    </form>
+  </section>
+
+  <!-- Usage -->
+  <section id="view-usage" class="stack" hidden>
+    <h2>Usage, last 30 days</h2>
+    <div class="stats" id="usage"></div>
+  </section>
+</main>
+
+<div class="toast" id="toast" role="status" hidden></div>
+<script src="app.js"></script>
+</body>
+</html>

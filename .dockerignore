@@ -1,0 +1,8 @@
+.venv
+.git
+runs
+dist
+docs
+tests
+**/__pycache__
+*.safetensors

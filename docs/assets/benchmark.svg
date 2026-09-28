@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1032" height="388" viewBox="0 0 1032 388" role="img" aria-label="Benchmark: correct answers, memory and time to first token per setup">
+<style>
+:root{--bg:#ffffff;--ink:#141a22;--muted:#566170;--line:#d3d9e0;--bar:#7b8594;--accent:#2b45d4}
+@media (prefers-color-scheme:dark){:root{--bg:#0d1015;--ink:#e6eaf0;--muted:#97a1ae;--line:#28303a;--bar:#6d7787;--accent:#6f86f2}}
+text{font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;fill:var(--ink)}
+.title{font-size:14px;font-weight:600}.label{font-size:13px}.label.accent{font-weight:600}
+.value{font-size:12px;fill:var(--muted);font-variant-numeric:tabular-nums}
+.sub{font-size:12px;fill:var(--muted)}.axis{stroke:var(--line);stroke-width:1}
+.bar{fill:var(--bar)}.bar.accent{fill:var(--accent)}
+</style>
+<rect width="1032" height="388" fill="var(--bg)"/>
+<text x="10" y="85.0" class="label">Full documents (2,341 tokens)</text>
+<text x="10" y="119.0" class="label">RAG, 4 × 256-token chunks</text>
+<text x="10" y="153.0" class="label">RAG, 2 × 256-token chunks</text>
+<text x="10" y="187.0" class="label">RAG, 1 × 256-token chunks</text>
+<text x="10" y="221.0" class="label accent">Cartridge + 1 RAG chunk (506 tokens)</text>
+<text x="10" y="255.0" class="label accent">Cartridge (1,024 tokens)</text>
+<text x="10" y="289.0" class="label accent">Cartridge (256 tokens)</text>
+<text x="10" y="323.0" class="label">No context</text>
+<text x="250" y="50" class="title">Correct answers</text>
+<line x1="250" y1="64" x2="250" y2="336" class="axis"/>
+<path class="bar" d="M250,72 h147.793 q4,0 4,4 v10 q0,4 -4,4 h-147.793 z"/>
+<text x="407.793" y="85.0" class="value">25/28 (89%)</text>
+<path class="bar" d="M250,106 h141.707 q4,0 4,4 v10 q0,4 -4,4 h-141.707 z"/>
+<text x="401.707" y="119.0" class="value">24/28 (86%)</text>
+<path class="bar" d="M250,140 h147.793 q4,0 4,4 v10 q0,4 -4,4 h-147.793 z"/>
+<text x="407.793" y="153.0" class="value">25/28 (89%)</text>
+<path class="bar" d="M250,174 h141.707 q4,0 4,4 v10 q0,4 -4,4 h-141.707 z"/>
+<text x="401.707" y="187.0" class="value">24/28 (86%)</text>
+<path class="bar accent" d="M250,208 h147.793 q4,0 4,4 v10 q0,4 -4,4 h-147.793 z"/>
+<text x="407.793" y="221.0" class="value">25/28 (89%)</text>
+<path class="bar accent" d="M250,242 h93.138 q4,0 4,4 v10 q0,4 -4,4 h-93.138 z"/>
+<text x="353.13800000000003" y="255.0" class="value">16/28 (57%)</text>
+<path class="bar accent" d="M250,276 h68.862 q4,0 4,4 v10 q0,4 -4,4 h-68.862 z"/>
+<text x="328.86199999999997" y="289.0" class="value">12/28 (43%)</text>
+<text x="256.0" y="323.0" class="value">0/28 (0%)</text>
+<text x="516" y="50" class="title">KV cache per conversation</text>
+<line x1="516" y1="64" x2="516" y2="336" class="axis"/>
+<path class="bar" d="M516,72 h166.0 q4,0 4,4 v10 q0,4 -4,4 h-166.0 z"/>
+<text x="692.0" y="85.0" class="value">256 MiB</text>
+<path class="bar" d="M516,106 h69.06580745948057 q4,0 4,4 v10 q0,4 -4,4 h-69.06580745948057 z"/>
+<text x="595.0658074594805" y="119.0" class="value">110 MiB</text>
+<path class="bar" d="M516,140 h32.84827182190978 q4,0 4,4 v10 q0,4 -4,4 h-32.84827182190978 z"/>
+<text x="558.8482718219097" y="153.0" class="value">56 MiB</text>
+<path class="bar" d="M516,174 h14.537004491310292 q4,0 4,4 v10 q0,4 -4,4 h-14.537004491310292 z"/>
+<text x="540.5370044913103" y="187.0" class="value">28 MiB</text>
+<path class="bar accent" d="M516,208 h32.76859988283538 q4,0 4,4 v10 q0,4 -4,4 h-32.76859988283538 z"/>
+<text x="558.7685998828354" y="221.0" class="value">55 MiB</text>
+<path class="bar accent" d="M516,242 h70.36047646943956 q4,0 4,4 v10 q0,4 -4,4 h-70.36047646943956 z"/>
+<text x="596.3604764694396" y="255.0" class="value">112 MiB</text>
+<path class="bar accent" d="M516,276 h14.59011911735989 q4,0 4,4 v10 q0,4 -4,4 h-14.59011911735989 z"/>
+<text x="540.5901191173599" y="289.0" class="value">28 MiB</text>
+<text x="522.0" y="323.0" class="value">0 MiB</text>
+<text x="782" y="50" class="title">Time to first token</text>
+<line x1="782" y1="64" x2="782" y2="336" class="axis"/>
+<path class="bar" d="M782,72 h166.0 q4,0 4,4 v10 q0,4 -4,4 h-166.0 z"/>
+<text x="958.0" y="85.0" class="value">1,129 ms</text>
+<path class="bar" d="M782,106 h63.45792736935341 q4,0 4,4 v10 q0,4 -4,4 h-63.45792736935341 z"/>
+<text x="855.4579273693535" y="119.0" class="value">448 ms</text>
+<path class="bar" d="M782,140 h37.107174490699734 q4,0 4,4 v10 q0,4 -4,4 h-37.107174490699734 z"/>
+<text x="829.1071744906998" y="153.0" class="value">273 ms</text>
+<path class="bar" d="M782,174 h20.393268379096543 q4,0 4,4 v10 q0,4 -4,4 h-20.393268379096543 z"/>
+<text x="812.3932683790965" y="187.0" class="value">162 ms</text>
+<path class="bar accent" d="M782,208 h27.169176262178922 q4,0 4,4 v10 q0,4 -4,4 h-27.169176262178922 z"/>
+<text x="819.1691762621789" y="221.0" class="value">207 ms</text>
+<path class="bar accent" d="M782,242 h8.196634189548272 q4,0 4,4 v10 q0,4 -4,4 h-8.196634189548272 z"/>
+<text x="800.1966341895483" y="255.0" class="value">81 ms</text>
+<path class="bar accent" d="M782,276 h8.798937112488929 q4,0 4,4 v10 q0,4 -4,4 h-8.798937112488929 z"/>
+<text x="800.7989371124889" y="289.0" class="value">85 ms</text>
+<path class="bar" d="M782,310 h2.1736049601417182 q4,0 4,4 v10 q0,4 -4,4 h-2.1736049601417182 z"/>
+<text x="794.1736049601417" y="323.0" class="value">41 ms</text>
+<text x="10" y="372" class="sub">28 questions about a 2,341-token document · Qwen/Qwen3-0.6B · graded by required facts · lower is better for memory and time</text>
+</svg>

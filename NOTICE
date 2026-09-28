@@ -1,0 +1,11 @@
+kvpack
+Copyright 2026 Numoy
+
+This project implements the method described in:
+  "Cartridges: Lightweight and general-purpose long context representations via self-study"
+  Sabri Eyuboglu, Ryan Ehrlich, Simran Arora, Neel Guha, Dylan Zinsley, Emily Liu,
+  Will Tennien, Atri Rudra, James Zou, Azalia Mirhoseini, Christopher Ré (2025).
+  https://arxiv.org/abs/2506.06266
+
+The self-study seed prompts in src/kvpack/seeds.py are adapted from the reference
+implementation at https://github.com/HazyResearch/cartridges (Apache License 2.0).

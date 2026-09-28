@@ -1,0 +1,28 @@
+{"question": "Who is the Station Lead for the 2038-2039 season?", "must_include": ["Lindqvist"]}
+{"question": "Who is the Deputy Lead?", "must_include": ["Priya|Ramaswamy"]}
+{"question": "What is the name of the bell that is rung when a borehole reaches Lake Morwen?", "must_include": ["Gerda"]}
+{"question": "How many hours does it take to drill a fresh borehole to Lake Morwen?", "must_include": ["31"]}
+{"question": "How long is the sampling window of a borehole, in hours?", "must_include": ["9|nine"]}
+{"question": "What are the three steps of the three-wash protocol?", "must_include": ["peroxide", "ethanol", "ultraviolet|UV"]}
+{"question": "During an alert, where do crew assigned to Lantern muster?", "must_include": ["orange"]}
+{"question": "Which alert level is raised if CO2 exceeds 0.8 percent anywhere on the station?", "must_include": ["amber"]}
+{"question": "How many people and how many kilograms can the Gondola carry?", "must_include": ["6|six", "900"]}
+{"question": "How many minutes does the Gondola take to travel the full height of the Chimney?", "must_include": ["7|seven"]}
+{"question": "How many litres of water is each crew member allocated per day?", "must_include": ["45"]}
+{"question": "At what temperature is the Loom clean room kept?", "must_include": ["4|four"]}
+{"question": "What is the minimum food reserve the station keeps, in days?", "must_include": ["120"]}
+{"question": "When does the Illeq Run depart Port Illeq?", "must_include": ["first Monday"]}
+{"question": "What is the Hearth module used for?", "must_include": ["galley|dining"]}
+{"question": "Who wrote the first entry in the ice book?", "must_include": ["Taverner"]}
+{"question": "How much energy can the sodium-ion batteries store?", "must_include": ["2.8"]}
+{"question": "When is the very-low-frequency radio tested?", "must_include": ["Sunday"]}
+{"question": "Which module has the hyperbaric chamber, and who is the physician responsible for it?", "must_include": ["Tern", "Wierzbicki"]}
+{"question": "If the geothermal loop fails, roughly how many hours can the station run on batteries, and in which module are the batteries?", "must_include": ["60", "Lantern"]}
+{"question": "Before an instrument enters Lake Morwen, what protocol must it pass and who must sign the log?", "must_include": ["wash", "Redcloud|Lake Science Coordinator"]}
+{"question": "What is the maximum crew size, and how many people stay over the winter?", "must_include": ["26", "9|nine"]}
+{"question": "How deep below the ice surface is the station, in metres?", "must_include": ["340"]}
+{"question": "For roughly how long has Lake Morwen been isolated from the atmosphere?", "must_include": ["1.2 million"]}
+{"question": "Which offence results in immediate removal from the station?", "must_include": ["wash"]}
+{"question": "Below how many days of food must the Station Lead request an emergency air drop, and how long does one take to arrange at minimum?", "must_include": ["90", "72"]}
+{"question": "Below what wind speed is helicopter evacuation from Camp Skua possible, in km/h?", "must_include": ["55"]}
+{"question": "What power does the geothermal loop deliver?", "must_include": ["410"]}

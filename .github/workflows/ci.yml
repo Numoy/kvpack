@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_call:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Install
+        run: uv sync --group dev
+      - name: Lint
+        run: uv run ruff check . && uv run ruff format --check .
+      - name: Test
+        run: uv run pytest -q
+
+  studio:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: studio
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Install
+        run: uv sync --group dev --extra modal
+      - name: Lint
+        run: uv run ruff check . && uv run ruff format --check .
+      - name: Test
+        run: uv run pytest -q
+      - name: Check the Modal app definition loads
+        run: uv run python -c "import kvpack_studio.modal_app"

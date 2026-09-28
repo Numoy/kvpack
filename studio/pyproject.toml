@@ -1,0 +1,42 @@
+[project]
+name = "kvpack-studio"
+version = "0.1.0"
+description = "kvpack Studio: upload documents, get a cartridge and an OpenAI-compatible endpoint."
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.11"
+dependencies = [
+    "kvpack",
+    "sqlalchemy>=2.0",
+    "python-multipart>=0.0.9",
+    "httpx>=0.27",
+]
+
+[project.optional-dependencies]
+modal = ["modal>=1.0"]
+postgres = ["psycopg[binary]>=3.2"]
+
+[project.scripts]
+kvpack-studio = "kvpack_studio.cli:main"
+
+[dependency-groups]
+dev = [
+    "openai>=3.19.2",
+    "pytest>=8.0",
+    "pytest-asyncio>=1.4.0",
+    "ruff>=0.6",
+]
+
+[tool.uv.sources]
+kvpack = { path = "..", editable = true }
+
+[build-system]
+requires = ["uv_build>=0.10.8,<0.11.0"]
+build-backend = "uv_build"
+
+[tool.ruff]
+extend = "../pyproject.toml"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
