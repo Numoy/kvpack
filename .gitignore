@@ -13,9 +13,6 @@ runs/
 *.safetensors
 !examples/**/*.safetensors
 
-# kvpack Cloud local data
-kvpack-cloud.db
-kvpack-cloud-data/
-
-# Launch notes (not part of the repo)
-launch/
+# kvpack Studio local data
+kvpack-studio.db
+kvpack-studio-data/
